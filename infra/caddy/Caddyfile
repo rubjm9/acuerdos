@@ -1,0 +1,16 @@
+# TLS automático (Let's Encrypt) y cabeceras de seguridad.
+# Sustituye acuerdos.example.eu por el dominio real.
+
+acuerdos.example.eu {
+	encode gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	reverse_proxy web:3000
+}
