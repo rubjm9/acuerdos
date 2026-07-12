@@ -8,6 +8,7 @@ import {
   Inbox,
   BarChart3,
   LineChart,
+  Library,
   Sparkles,
   Settings,
   type LucideIcon,
@@ -30,6 +31,7 @@ export const MAIN_NAV: NavItem[] = [
 ];
 
 export const SECONDARY_NAV: NavItem[] = [
+  { href: "/politicas", label: "Políticas", icon: Library },
   { href: "/expedientes", label: "Expedientes", icon: FolderOpen },
   { href: "/acuerdos", label: "Acuerdos", icon: Gavel },
   { href: "/actas", label: "Actas", icon: FileText },

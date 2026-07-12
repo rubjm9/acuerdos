@@ -2,12 +2,21 @@ import Link from "next/link";
 import { Gavel, Plus } from "lucide-react";
 import { requireUser, isSecretary } from "@/lib/session";
 import { queryAsUser } from "@/lib/db";
-import { formatFecha, ACUERDO_ESTADOS, type AcuerdoEstado } from "@/lib/domain";
+import {
+  formatFecha,
+  ACUERDO_ESTADOS,
+  ACUERDO_TIPOS,
+  type AcuerdoEstado,
+  type AcuerdoTipo,
+} from "@/lib/domain";
+import { acuerdoTipoSql, acuerdoTipoFilterSql } from "@/lib/acuerdo-tipo";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
+import { TipoBadge } from "@/components/tipo-badge";
 import { AreaBadges, type AreaChip } from "@/components/area-badges";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Acuerdos" };
 
@@ -16,6 +25,7 @@ type AcuerdoRow = {
   public_ref: string;
   titulo: string;
   estado: AcuerdoEstado;
+  tipo: AcuerdoTipo;
   fecha_adopcion: string;
   acta_numero: number;
   acta_año: number;
@@ -26,10 +36,10 @@ type AcuerdoRow = {
 export default async function AcuerdosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ area?: string; año?: string; estado?: string }>;
+  searchParams: Promise<{ area?: string; año?: string; estado?: string; tipo?: string }>;
 }) {
   const user = await requireUser();
-  const { area, año, estado } = await searchParams;
+  const { area, año, estado, tipo } = await searchParams;
 
   const [areas, years, acuerdos] = await Promise.all([
     queryAsUser<{ id: string; name: string }>(
@@ -44,6 +54,7 @@ export default async function AcuerdosPage({
       user.id,
       `SELECT ac.id, ac.public_ref, ac.titulo, ac.estado, ac.fecha_adopcion,
               a.numero AS acta_numero, a.año AS acta_año, ac.source_page,
+              ${acuerdoTipoSql("ac")} AS tipo,
               (SELECT json_agg(json_build_object('id', ar.id, 'name', ar.name, 'is_restricted', ar.is_restricted) ORDER BY ar.name)
                FROM acuerdo_areas aa JOIN areas ar ON ar.id = aa.area_id
                WHERE aa.acuerdo_id = ac.id) AS areas
@@ -52,9 +63,10 @@ export default async function AcuerdosPage({
        WHERE ($1::uuid IS NULL OR EXISTS (SELECT 1 FROM acuerdo_areas x WHERE x.acuerdo_id = ac.id AND x.area_id = $1::uuid))
          AND ($2::int IS NULL OR extract(year FROM ac.fecha_adopcion)::int = $2::int)
          AND ($3::acuerdo_estado IS NULL OR ac.estado = $3::acuerdo_estado)
+         AND ${acuerdoTipoFilterSql(4, "ac")}
        ORDER BY ac.fecha_adopcion DESC, ac.public_ref DESC
        LIMIT 100`,
-      [area || null, año ? Number(año) : null, estado || null]
+      [area || null, año ? Number(año) : null, estado || null, tipo || null]
     ),
   ]);
 
@@ -77,8 +89,39 @@ export default async function AcuerdosPage({
         }
       />
 
+      {/* Filtro por tipo (clasificación derivada) */}
+      <div role="tablist" aria-label="Tipo de acuerdo" className="flex flex-wrap gap-1.5">
+        {[{ v: "", l: "Todos" }, ...Object.entries(ACUERDO_TIPOS).map(([v, l]) => ({ v, l }))].map(
+          (f) => {
+            const params = new URLSearchParams();
+            if (area) params.set("area", area);
+            if (año) params.set("año", año);
+            if (estado) params.set("estado", estado);
+            if (f.v) params.set("tipo", f.v);
+            const qs = params.toString();
+            return (
+              <Link
+                key={f.v || "todos"}
+                role="tab"
+                aria-selected={(tipo ?? "") === f.v}
+                href={qs ? `/acuerdos?${qs}` : "/acuerdos"}
+                className={cn(
+                  "inline-flex min-h-9 items-center rounded-full border px-4 text-sm font-medium transition-colors",
+                  (tipo ?? "") === f.v
+                    ? "border-primary/40 bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {f.l}
+              </Link>
+            );
+          }
+        )}
+      </div>
+
       {/* Filtros */}
       <form className="flex flex-wrap items-center gap-2" action="/acuerdos" method="get">
+        {tipo ? <input type="hidden" name="tipo" value={tipo} /> : null}
         <label className="sr-only" htmlFor="f-area">Filtrar por área</label>
         <select id="f-area" name="area" defaultValue={area ?? ""} className={selectClass}>
           <option value="">Todas las áreas</option>
@@ -101,7 +144,7 @@ export default async function AcuerdosPage({
           ))}
         </select>
         <Button type="submit" variant="outline" size="sm">Filtrar</Button>
-        {area || año || estado ? (
+        {area || año || estado || tipo ? (
           <Button asChild variant="ghost" size="sm">
             <Link href="/acuerdos">Limpiar</Link>
           </Button>
@@ -131,7 +174,10 @@ export default async function AcuerdosPage({
                       {ac.source_page ? `, pág. ${ac.source_page}` : ""}
                     </div>
                   </div>
-                  <StatusBadge estado={ac.estado} className="shrink-0" />
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    <StatusBadge estado={ac.estado} />
+                    <TipoBadge tipo={ac.tipo} />
+                  </div>
                 </div>
                 <AreaBadges areas={ac.areas ?? []} />
               </Link>

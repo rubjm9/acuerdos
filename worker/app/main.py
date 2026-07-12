@@ -67,6 +67,30 @@ def index_acuerdo(acuerdo_id: uuid.UUID, body: IndexRequest) -> dict:
     return {"chunks": len(chunks), "embedded": vectors is not None}
 
 
+@app.post("/politicas/{politica_id}/index")
+def index_politica(politica_id: uuid.UUID, body: IndexRequest) -> dict:
+    """Trocea el cuerpo de la política, lo (re)indexa y guarda embeddings si hay TEI.
+
+    El llamador (web) solo invoca este endpoint para políticas NO restringidas.
+    """
+    chunks = chunk_text(body.text)
+    vectors = None
+    try:
+        vectors = embed_texts(chunks)
+    except Exception:
+        logger.warning("TEI no disponible; los chunks se guardan sin embedding", exc_info=True)
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("DELETE FROM politica_chunks WHERE politica_id = %s", (politica_id,))
+        for idx, chunk in enumerate(chunks):
+            embedding = to_vector_literal(vectors[idx]) if vectors else None
+            cur.execute(
+                "INSERT INTO politica_chunks (politica_id, chunk_idx, chunk_text, embedding) "
+                "VALUES (%s, %s, %s, %s::vector)",
+                (politica_id, idx, chunk, embedding),
+            )
+    return {"chunks": len(chunks), "embedded": vectors is not None}
+
+
 @app.post("/search/embed")
 def search_embed(body: EmbedRequest) -> dict:
     """Embedding de una consulta de búsqueda; null si TEI no está configurado."""

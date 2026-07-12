@@ -2,17 +2,18 @@
 
 import { Fragment, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUp, FileText, Sparkles } from "lucide-react";
+import { ArrowUp, FileText, Library, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 type Source = {
-  acuerdo_id: string;
-  public_ref: string;
+  kind: "acuerdo" | "politica";
+  id: string;
+  ref: string;
   titulo: string;
-  acta_id: string;
+  href: string;
   cita: string;
-  fecha: string;
+  fecha: string | null;
 };
 
 type Turn = {
@@ -34,17 +35,18 @@ const SUGERENCIAS = [
  * enlaces al acuerdo correspondiente cuando está entre las fuentes.
  */
 function AnswerText({ text, sources }: { text: string; sources: Source[] }) {
-  const byRef = new Map(sources.map((s) => [s.public_ref, s.acuerdo_id]));
-  const parts = text.split(/(\[ACU-\d{4}-\d{4}\])/g);
+  const byRef = new Map(sources.map((s) => [s.ref, s.href]));
+  // Divide por tokens de cita de acuerdo [ACU-AAAA-NNNN] o de política [POL-NNNN].
+  const parts = text.split(/(\[(?:ACU-\d{4}-\d{4}|POL-\d{4})\])/g);
   return (
     <>
       {parts.map((part, i) => {
-        const m = part.match(/^\[(ACU-\d{4}-\d{4})\]$/);
+        const m = part.match(/^\[((?:ACU-\d{4}-\d{4}|POL-\d{4}))\]$/);
         if (m && byRef.has(m[1])) {
           return (
             <Link
               key={i}
-              href={`/acuerdos/${byRef.get(m[1])}`}
+              href={byRef.get(m[1])!}
               className="mx-0.5 inline-flex items-center rounded bg-accent px-1.5 py-0.5 text-xs font-medium text-primary no-underline hover:bg-accent/70"
             >
               {m[1]}
@@ -170,16 +172,20 @@ export function AssistantChat({ llmEnabled }: { llmEnabled: boolean }) {
                   <div className="text-xs font-medium text-muted-foreground">Fuentes</div>
                   <ul className="space-y-1.5">
                     {turn.sources.map((s) => (
-                      <li key={s.acuerdo_id}>
+                      <li key={`${s.kind}-${s.id}`}>
                         <Link
-                          href={`/acuerdos/${s.acuerdo_id}`}
+                          href={s.href}
                           className="flex items-start gap-2 rounded-lg border bg-card px-3 py-2 text-sm transition-colors hover:border-ring/40"
                         >
-                          <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+                          {s.kind === "politica" ? (
+                            <Library className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+                          ) : (
+                            <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+                          )}
                           <span className="min-w-0">
                             <span className="font-medium">{s.titulo}</span>
                             <span className="block text-xs text-muted-foreground">
-                              {s.public_ref} · {s.cita}
+                              {s.ref} · {s.cita}
                             </span>
                           </span>
                         </Link>

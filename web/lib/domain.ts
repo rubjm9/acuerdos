@@ -56,6 +56,31 @@ export const EXPEDIENTE_ESTADOS = {
   cerrado: "Cerrado",
 } as const;
 
+export const POLITICA_ESTADOS = {
+  vigente: "Vigente",
+  en_revision: "En revisión",
+  derogada: "Derogada",
+} as const;
+export type PoliticaEstado = keyof typeof POLITICA_ESTADOS;
+
+/**
+ * Clasificación DERIVADA de un acuerdo (no se almacena): se calcula de sus
+ * asociaciones con prevalencia Política → Expediente → Eventual.
+ */
+export const ACUERDO_TIPOS = {
+  politica: "De política",
+  expediente: "En expediente",
+  eventual: "Eventual",
+} as const;
+export type AcuerdoTipo = keyof typeof ACUERDO_TIPOS;
+
+/** Insignia por tipo (color de apoyo + etiqueta; nunca solo color). */
+export const TIPO_BADGE: Record<AcuerdoTipo, string> = {
+  politica: "bg-status-vigor-bg text-status-vigor",
+  expediente: "bg-accent text-accent-foreground",
+  eventual: "bg-secondary text-secondary-foreground",
+};
+
 /** Clases de color del badge por estado (fondo suave + texto AA; nunca solo color). */
 export const ESTADO_BADGE: Record<AcuerdoEstado | TareaEstado, string> = {
   en_vigor: "bg-status-vigor-bg text-status-vigor",

@@ -10,12 +10,16 @@ import {
   LINK_TIPOS,
   LINK_TIPOS_INVERSO,
   type AcuerdoEstado,
+  type AcuerdoTipo,
   type LinkTipo,
   type TareaEstado,
 } from "@/lib/domain";
+import { acuerdoTipoSql } from "@/lib/acuerdo-tipo";
 import { audit } from "@/lib/audit";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
+import { TipoBadge } from "@/components/tipo-badge";
+import { Library } from "lucide-react";
 import { AreaBadges, type AreaChip } from "@/components/area-badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,8 +46,12 @@ type AcuerdoRow = {
   acta_id: string;
   acta_numero: number;
   acta_año: number;
+  tipo: AcuerdoTipo;
   areas: AreaChip[] | null;
 };
+
+type ExpedienteRow = { id: string; titulo: string };
+type PoliticaRow = { id: string; titulo: string; public_ref: string };
 
 type LinkRow = {
   id: string;
@@ -64,18 +72,17 @@ type TareaRow = {
   assignee: string | null;
 };
 
-type ExpedienteRow = { id: string; titulo: string };
-
 export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]">) {
   const user = await requireUser();
   const { id } = await params;
 
-  const [acuerdos, links, tareas, expedientes] = await Promise.all([
+  const [acuerdos, links, tareas, expedientes, politicas] = await Promise.all([
     queryAsUser<AcuerdoRow>(
       user.id,
       `SELECT ac.id, ac.public_ref, ac.titulo, ac.full_text, ac.full_text_enc,
               ac.fecha_adopcion, ac.estado, ac.is_restricted, ac.source_page,
               ac.acta_id, a.numero AS acta_numero, a.año AS acta_año,
+              ${acuerdoTipoSql("ac")} AS tipo,
               (SELECT json_agg(json_build_object('id', ar.id, 'name', ar.name, 'is_restricted', ar.is_restricted) ORDER BY ar.name)
                FROM acuerdo_areas aa JOIN areas ar ON ar.id = aa.area_id
                WHERE aa.acuerdo_id = ac.id) AS areas
@@ -116,6 +123,13 @@ export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]"
        WHERE ea.acuerdo_id = $1 ORDER BY e.titulo`,
       [id]
     ),
+    queryAsUser<PoliticaRow>(
+      user.id,
+      `SELECT p.id, p.titulo, p.public_ref FROM politicas p
+       JOIN politica_acuerdos pa ON pa.politica_id = p.id
+       WHERE pa.acuerdo_id = $1 ORDER BY p.titulo`,
+      [id]
+    ),
   ]);
 
   const ac = acuerdos[0];
@@ -138,6 +152,7 @@ export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]"
         meta={
           <>
             <StatusBadge estado={ac.estado} />
+            <TipoBadge tipo={ac.tipo} />
             {ac.is_restricted ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-status-anulado-bg px-2.5 py-0.5 text-xs font-medium text-status-anulado">
                 <Lock className="size-3" aria-hidden /> Contenido restringido
@@ -188,6 +203,23 @@ export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]"
       </Card>
 
       <AreaBadges areas={ac.areas ?? []} />
+
+      {/* Políticas */}
+      {politicas.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <Library className="size-4 text-muted-foreground" aria-hidden />
+          <span className="text-muted-foreground">En políticas:</span>
+          {politicas.map((p) => (
+            <Link
+              key={p.id}
+              href={`/politicas/${p.id}`}
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {p.titulo}
+            </Link>
+          ))}
+        </div>
+      ) : null}
 
       {/* Expedientes */}
       {expedientes.length > 0 ? (

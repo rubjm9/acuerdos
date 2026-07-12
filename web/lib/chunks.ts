@@ -64,3 +64,35 @@ export function requestEmbeddings(acuerdoId: string, titulo: string, texto: stri
     /* el worker puede estar caído; los chunks FTS ya están indexados */
   });
 }
+
+/**
+ * Troceado del cuerpo de una Política para búsqueda/asistente (FTS inmediato;
+ * embeddings los recalcula el worker). Solo debe llamarse para políticas NO
+ * restringidas — el llamador lo garantiza.
+ */
+export async function indexPoliticaChunks(
+  client: PoolClient,
+  politicaId: string,
+  texto: string
+) {
+  await client.query("DELETE FROM politica_chunks WHERE politica_id = $1", [politicaId]);
+  const chunks = splitText(texto);
+  for (let i = 0; i < chunks.length; i++) {
+    await client.query(
+      "INSERT INTO politica_chunks (politica_id, chunk_idx, chunk_text) VALUES ($1, $2, $3)",
+      [politicaId, i, chunks[i]]
+    );
+  }
+}
+
+export function requestPoliticaEmbeddings(politicaId: string, texto: string) {
+  const workerUrl = process.env.WORKER_URL;
+  if (!workerUrl) return;
+  fetch(`${workerUrl}/politicas/${politicaId}/index`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: texto }),
+  }).catch(() => {
+    /* el worker puede estar caído; los chunks FTS ya están indexados */
+  });
+}

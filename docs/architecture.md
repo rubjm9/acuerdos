@@ -81,6 +81,24 @@ enlaces sugeridos jamás se confirman solos.
 - **Archivo 1996+**: la ingesta es year-agnostic (parámetro año 1990–2100); el
   mismo pipeline incorpora cualquier año sin cambios.
 
+## Fase 3 (implementada) — Políticas y clasificación derivada
+
+- **Políticas** (`/politicas`, `db/migrations/004_politicas.sql`): objeto nuevo de primer nivel.
+  Documento vivo con **cuerpo markdown** (render saneado con react-markdown + rehype-sanitize;
+  editor con vista previa) que consolida la postura sobre una temática y agrupa acuerdos
+  (`politica_acuerdos`). `public_ref` estable `POL-NNNN`. RLS y área principal igual que los
+  expedientes.
+- **Clasificación derivada** de los acuerdos (sin columna `tipo`): se calcula de las
+  asociaciones con prevalencia **Política → Expediente → Eventual** (`lib/acuerdo-tipo.ts`).
+  Se permite doble pertenencia; la ficha muestra todas las pertenencias y la insignia principal
+  sigue la prevalencia. Filtro por tipo en la lista de acuerdos.
+- **Asistente con cita dual**: el cuerpo de las políticas **no restringidas** se indexa en
+  `politica_chunks` (mismo invariante: el contenido restringido nunca se indexa). `retrieveContext`
+  fusiona `acuerdo_chunks` + `politica_chunks` (RLS + RRF); el LLM cita `[ACU-…]` (acta+página) y
+  `[POL-…]` (Política «título»), y la UI enlaza cada token a su ficha. Worker: endpoint
+  `/politicas/{id}/index` para embeddings.
+- **Informe** PDF/XLSX de una política (cuerpo + acuerdos con cita acta+página).
+
 ## Escalado
 
 10–12 usuarios y ~15.000 acuerdos están muy por debajo de los límites de un

@@ -88,6 +88,49 @@ export async function renderExpedientePdf(opts: {
   return Buffer.from(await renderToBuffer(doc));
 }
 
+/**
+ * Informe de una Política: cuerpo (markdown como texto plano legible) + acuerdos
+ * que la sustentan, cada uno con su cita acta+página.
+ */
+export async function renderPoliticaPdf(opts: {
+  titulo: string;
+  public_ref: string;
+  resumen?: string | null;
+  cuerpo?: string | null;
+  estado: string;
+  generadoPor: string;
+  acuerdos: { public_ref: string; titulo: string; fecha: string; estado: string; cita: string }[];
+}): Promise<Buffer> {
+  const doc = (
+    <Document title={`Política — ${opts.titulo}`} language="es">
+      <Page size="A4" style={s.page}>
+        <Text style={s.h1}>{opts.titulo}</Text>
+        <Text style={s.subtitle}>
+          Política {opts.public_ref} · {opts.estado} · generado el{" "}
+          {new Date().toLocaleDateString("es-ES")} por {opts.generadoPor}
+        </Text>
+        {opts.resumen ? <Text style={{ marginBottom: 12 }}>{opts.resumen}</Text> : null}
+        {opts.cuerpo?.trim() ? (
+          <>
+            <Text style={s.h2}>Texto de la política</Text>
+            <Text style={{ marginBottom: 14, lineHeight: 1.5 }}>{opts.cuerpo}</Text>
+          </>
+        ) : null}
+        <Text style={s.h2}>Acuerdos que la sustentan ({opts.acuerdos.length})</Text>
+        {opts.acuerdos.map((a, i) => (
+          <View key={i} style={s.row} wrap={false}>
+            <Text style={[s.cell, { width: "52%" }]}>{a.titulo}</Text>
+            <Text style={[s.cell, s.muted, { width: "16%" }]}>{a.public_ref}</Text>
+            <Text style={[s.cell, s.muted, { width: "32%" }]}>{a.cita}</Text>
+          </View>
+        ))}
+        <Footer title={`Política — ${opts.titulo}`} />
+      </Page>
+    </Document>
+  );
+  return Buffer.from(await renderToBuffer(doc));
+}
+
 export type TareaReportRow = {
   responsable: string;
   titulo: string;

@@ -21,15 +21,17 @@ const RRF_K = 60;
 const MAX_CHUNK_CHARS = 1200;
 
 export type ContextPassage = {
-  acuerdo_id: string;
-  public_ref: string;
+  kind: "acuerdo" | "politica";
+  ref: string; // ACU-AAAA-NNNN | POL-NNNN
+  id: string; // id del acuerdo o de la política (para el enlace)
   titulo: string;
-  fecha_adopcion: string;
-  acta_id: string;
-  acta_numero: number;
-  acta_año: number;
+  fecha: string | null; // solo acuerdos
+  acta_id: string | null;
+  acta_numero: number | null;
+  acta_año: number | null;
   source_page: number | null;
   chunk_text: string;
+  score: number;
 };
 
 export function llmEnabled(): boolean {
@@ -55,27 +57,16 @@ async function embedQuery(q: string): Promise<number[] | null> {
   }
 }
 
-/**
- * Recupera los pasajes más relevantes para la pregunta (denso + disperso, RRF),
- * uno por acuerdo, con su cita de origen. RLS-scoped por `userId`.
- */
-export async function retrieveContext(
+/** RRF (kw+vec) sobre `acuerdo_chunks`, RLS-scoped. */
+async function retrieveAcuerdos(
   userId: string,
-  question: string
+  question: string,
+  vectorLiteral: string | null
 ): Promise<ContextPassage[]> {
-  const embedding = await embedQuery(question);
-  const vectorLiteral = embedding ? `[${embedding.join(",")}]` : null;
-
-  const rows = await queryAsUser<ContextPassage>(
+  return queryAsUser<ContextPassage>(
     userId,
-    // Para preguntas en lenguaje natural relajamos la tsquery a OR (los verbos y
-    // palabras funcionales no deben exigir coincidencia total): se castea la
-    // websearch_to_tsquery a texto, se sustituye '&' por '|' y se recastea.
     `WITH q AS (
-       SELECT NULLIF(
-                replace(websearch_to_tsquery('spanish', $1)::text, ' & ', ' | '),
-                ''
-              )::tsquery AS query
+       SELECT NULLIF(replace(websearch_to_tsquery('spanish', $1)::text, ' & ', ' | '), '')::tsquery AS query
      ),
      kw AS (
        SELECT ch.id, ch.acuerdo_id, ch.chunk_text,
@@ -93,8 +84,7 @@ export async function retrieveContext(
        LIMIT ${CANDIDATES}
      ),
      fused AS (
-       SELECT COALESCE(kw.id, vec.id) AS chunk_id,
-              COALESCE(kw.acuerdo_id, vec.acuerdo_id) AS acuerdo_id,
+       SELECT COALESCE(kw.acuerdo_id, vec.acuerdo_id) AS acuerdo_id,
               COALESCE(kw.chunk_text, vec.chunk_text) AS chunk_text,
               COALESCE(1.0 / (${RRF_K} + kw.rnk), 0) + COALESCE(1.0 / (${RRF_K} + vec.rnk), 0) AS score
        FROM kw FULL OUTER JOIN vec ON kw.id = vec.id
@@ -103,10 +93,10 @@ export async function retrieveContext(
        SELECT DISTINCT ON (acuerdo_id) acuerdo_id, chunk_text, score
        FROM fused ORDER BY acuerdo_id, score DESC
      )
-     SELECT ac.id AS acuerdo_id, ac.public_ref, ac.titulo,
-            to_char(ac.fecha_adopcion, 'YYYY-MM-DD') AS fecha_adopcion,
+     SELECT 'acuerdo' AS kind, ac.public_ref AS ref, ac.id AS id, ac.titulo,
+            to_char(ac.fecha_adopcion, 'YYYY-MM-DD') AS fecha,
             ac.acta_id, a.numero AS acta_numero, a.año AS acta_año, ac.source_page,
-            left(b.chunk_text, ${MAX_CHUNK_CHARS}) AS chunk_text
+            left(b.chunk_text, ${MAX_CHUNK_CHARS}) AS chunk_text, b.score
      FROM best b
      JOIN acuerdos ac ON ac.id = b.acuerdo_id
      JOIN actas a ON a.id = ac.acta_id
@@ -114,10 +104,81 @@ export async function retrieveContext(
      LIMIT ${CONTEXT_PASSAGES}`,
     [question, vectorLiteral]
   );
-  return rows;
+}
+
+/** RRF (kw+vec) sobre `politica_chunks`, RLS-scoped. */
+async function retrievePoliticas(
+  userId: string,
+  question: string,
+  vectorLiteral: string | null
+): Promise<ContextPassage[]> {
+  return queryAsUser<ContextPassage>(
+    userId,
+    `WITH q AS (
+       SELECT NULLIF(replace(websearch_to_tsquery('spanish', $1)::text, ' & ', ' | '), '')::tsquery AS query
+     ),
+     kw AS (
+       SELECT ch.id, ch.politica_id, ch.chunk_text,
+              row_number() OVER (ORDER BY ts_rank_cd(ch.tsv, (SELECT query FROM q)) DESC) AS rnk
+       FROM politica_chunks ch
+       WHERE (SELECT query FROM q) IS NOT NULL AND ch.tsv @@ (SELECT query FROM q)
+       LIMIT ${CANDIDATES}
+     ),
+     vec AS (
+       SELECT ch.id, ch.politica_id, ch.chunk_text,
+              row_number() OVER (ORDER BY ch.embedding <=> $2::vector) AS rnk
+       FROM politica_chunks ch
+       WHERE $2::text IS NOT NULL AND ch.embedding IS NOT NULL
+       ORDER BY ch.embedding <=> $2::vector
+       LIMIT ${CANDIDATES}
+     ),
+     fused AS (
+       SELECT COALESCE(kw.politica_id, vec.politica_id) AS politica_id,
+              COALESCE(kw.chunk_text, vec.chunk_text) AS chunk_text,
+              COALESCE(1.0 / (${RRF_K} + kw.rnk), 0) + COALESCE(1.0 / (${RRF_K} + vec.rnk), 0) AS score
+       FROM kw FULL OUTER JOIN vec ON kw.id = vec.id
+     ),
+     best AS (
+       SELECT DISTINCT ON (politica_id) politica_id, chunk_text, score
+       FROM fused ORDER BY politica_id, score DESC
+     )
+     SELECT 'politica' AS kind, p.public_ref AS ref, p.id AS id, p.titulo,
+            NULL AS fecha, NULL::uuid AS acta_id, NULL::int AS acta_numero,
+            NULL::int AS acta_año, NULL::int AS source_page,
+            left(b.chunk_text, ${MAX_CHUNK_CHARS}) AS chunk_text, b.score
+     FROM best b
+     JOIN politicas p ON p.id = b.politica_id
+     ORDER BY b.score DESC
+     LIMIT ${CONTEXT_PASSAGES}`,
+    [question, vectorLiteral]
+  );
+}
+
+/**
+ * Recupera los pasajes más relevantes para la pregunta sobre ACUERDOS y
+ * POLÍTICAS (denso + disperso, RRF), uno por documento, con su cita de origen.
+ * RLS-scoped por `userId`: el contenido restringido nunca aparece (no se indexa).
+ */
+export async function retrieveContext(
+  userId: string,
+  question: string
+): Promise<ContextPassage[]> {
+  const embedding = await embedQuery(question);
+  const vectorLiteral = embedding ? `[${embedding.join(",")}]` : null;
+
+  const [acuerdos, politicas] = await Promise.all([
+    retrieveAcuerdos(userId, question, vectorLiteral),
+    retrievePoliticas(userId, question, vectorLiteral),
+  ]);
+
+  // Fusión final por score RRF (ambos pools están en la misma escala).
+  return [...acuerdos, ...politicas]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, CONTEXT_PASSAGES);
 }
 
 export function citation(p: ContextPassage): string {
+  if (p.kind === "politica") return `Política «${p.titulo}»`;
   return `Acta ${p.acta_numero}/${p.acta_año}${p.source_page ? `, pág. ${p.source_page}` : ""}`;
 }
 
@@ -126,7 +187,7 @@ export function buildMessages(question: string, passages: ContextPassage[]) {
   const contexto = passages
     .map(
       (p) =>
-        `[${p.public_ref}] «${p.titulo}» (${citation(p)}, ${p.fecha_adopcion.slice(0, 10)})\n${p.chunk_text}`
+        `[${p.ref}] «${p.titulo}» (${citation(p)}${p.fecha ? `, ${p.fecha}` : ""})\n${p.chunk_text}`
     )
     .join("\n\n---\n\n");
 
@@ -134,8 +195,8 @@ export function buildMessages(question: string, passages: ContextPassage[]) {
     "Eres el asistente documental de la Asamblea. Respondes ÚNICAMENTE con la " +
     "información contenida en los PASAJES proporcionados, en español claro y " +
     "conciso. Reglas estrictas:\n" +
-    "1. Cita SIEMPRE la referencia del acuerdo entre corchetes, p. ej. [ACU-2018-0001], " +
-    "junto a cada afirmación que la respalde.\n" +
+    "1. Cita SIEMPRE la referencia entre corchetes junto a cada afirmación que la " +
+    "respalde: usa [ACU-AAAA-NNNN] para acuerdos y [POL-NNNN] para políticas.\n" +
     "2. No inventes ni uses conocimiento externo. Si la respuesta no consta en los " +
     "pasajes, responde exactamente: «No consta en el corpus disponible.»\n" +
     "3. Si varios acuerdos forman un hilo temporal, resúmelo en orden cronológico.\n" +
@@ -144,7 +205,7 @@ export function buildMessages(question: string, passages: ContextPassage[]) {
   const user =
     `PASAJES:\n\n${contexto || "(sin pasajes relevantes)"}\n\n` +
     `PREGUNTA: ${question}\n\n` +
-    "Responde citando las referencias [ACU-…] pertinentes.";
+    "Responde citando las referencias [ACU-…] y [POL-…] pertinentes.";
 
   return [
     { role: "system" as const, content: system },

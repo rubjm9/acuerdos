@@ -24,12 +24,13 @@ const bodySchema = z.object({ question: z.string().trim().min(3).max(500) });
 
 function sourcePayload(p: ContextPassage) {
   return {
-    acuerdo_id: p.acuerdo_id,
-    public_ref: p.public_ref,
+    kind: p.kind,
+    id: p.id,
+    ref: p.ref,
     titulo: p.titulo,
-    acta_id: p.acta_id,
+    href: p.kind === "politica" ? `/politicas/${p.id}` : `/acuerdos/${p.id}`,
     cita: citation(p),
-    fecha: p.fecha_adopcion.slice(0, 10),
+    fecha: p.fecha,
   };
 }
 
