@@ -7,6 +7,8 @@ import {
   Gavel,
   Inbox,
   BarChart3,
+  LineChart,
+  Sparkles,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -19,18 +21,20 @@ export type NavItem = {
   roles?: string[];
 };
 
-/** Navegación principal (los 5 primeros son las pestañas móviles). */
+/** Navegación principal (pestañas móviles; el 5.º hueco lo ocupa «Más»). */
 export const MAIN_NAV: NavItem[] = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/busqueda", label: "Buscar", icon: Search },
-  { href: "/expedientes", label: "Expedientes", icon: FolderOpen },
+  { href: "/asistente", label: "Asistente", icon: Sparkles },
   { href: "/tareas", label: "Tareas", icon: CheckSquare },
 ];
 
 export const SECONDARY_NAV: NavItem[] = [
+  { href: "/expedientes", label: "Expedientes", icon: FolderOpen },
   { href: "/acuerdos", label: "Acuerdos", icon: Gavel },
   { href: "/actas", label: "Actas", icon: FileText },
   { href: "/ingesta", label: "Ingesta", icon: Inbox, roles: ["secretary", "administrator"] },
+  { href: "/analitica", label: "Analítica", icon: LineChart },
   { href: "/informes", label: "Informes", icon: BarChart3 },
   { href: "/admin", label: "Administración", icon: Settings, roles: ["administrator"] },
 ];

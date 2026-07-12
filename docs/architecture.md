@@ -61,6 +61,26 @@ acta autocreada si falta (`annual_compilation` + página), referencia asignada,
 chunks e (async) embeddings. **Nada se publica sin aprobación humana**; los
 enlaces sugeridos jamás se confirman solos.
 
+## Fase 2 (implementada)
+
+- **Asistente NL** (`/asistente`, `lib/assistant.ts`, `app/api/asistente`):
+  RAG sobre `acuerdo_chunks`. La recuperación es RLS-scoped (denso + disperso
+  con RRF; para preguntas en lenguaje natural la tsquery se relaja a OR para no
+  exigir coincidencia de verbos/palabras funcionales). Los pasajes se envían al
+  LLM autoalojado (vLLM, streaming SSE→texto) con instrucción estricta: responder
+  SOLO desde los pasajes y citar `[ACU-AAAA-NNNN]`; si no consta, decirlo. La UI
+  transmite en vivo y convierte las citas en enlaces. Sin LLM degrada a mostrar
+  las fuentes. El contenido restringido nunca entra (no tiene chunks).
+- **Enlaces auto-sugeridos**: al aprobar un candidato de ingesta, sus
+  `suggested_links` (referencias `ACU-…` detectadas) se materializan como
+  `acuerdo_links` con `confirmed=false`; la Secretaría los confirma o descarta
+  desde la ficha del acuerdo. Nunca se auto-confirman.
+- **Analítica** (`/analitica`): estado de acuerdos, acuerdos en curso sin
+  resolver (>12 meses), seguimiento por área (% tareas completadas, vencidas) y
+  carga por responsable. Agregaciones RLS-scoped; barras accesibles sin librería.
+- **Archivo 1996+**: la ingesta es year-agnostic (parámetro año 1990–2100); el
+  mismo pipeline incorpora cualquier año sin cambios.
+
 ## Escalado
 
 10–12 usuarios y ~15.000 acuerdos están muy por debajo de los límites de un

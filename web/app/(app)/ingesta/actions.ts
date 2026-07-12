@@ -102,11 +102,15 @@ export async function approveCandidate(formData: FormData) {
 
   const { acuerdoId, jobId, restricted } = await withUser(user.id, async (c) => {
     const cand = await c.query(
-      "SELECT job_id FROM extraction_candidates WHERE id = $1 AND review_status = 'pending'",
+      "SELECT job_id, suggested_links FROM extraction_candidates WHERE id = $1 AND review_status = 'pending'",
       [data.candidateId]
     );
     if (cand.rows.length === 0) throw new Error("El candidato ya fue revisado");
     const jobId = cand.rows[0].job_id as string;
+    const suggestedLinks = (cand.rows[0].suggested_links ?? []) as {
+      ref_text?: string;
+      tipo?: string;
+    }[];
 
     // acta: buscar o crear apuntando a la recopilación anual
     let actaRes = await c.query("SELECT id FROM actas WHERE año = $1 AND numero = $2", [
@@ -160,12 +164,49 @@ export async function approveCandidate(formData: FormData) {
       await indexAcuerdoChunks(c, acuerdoId, data.titulo, data.texto);
     }
 
+    // Enlaces AUTO-SUGERIDOS: se crean SIN confirmar (confirmed=false) para que
+    // la Secretaría los revise en la ficha del acuerdo. Nunca se auto-confirman.
+    const LINK_TIPOS = new Set([
+      "deriva_de",
+      "continua",
+      "modifica",
+      "sustituye_a",
+      "relacionado_con",
+    ]);
+    const REF_RE = /ACU-\d{4}-\d{4}/i;
+    let sugeridos = 0;
+    for (const link of suggestedLinks) {
+      const refMatch = (link.ref_text ?? "").toUpperCase().match(REF_RE);
+      if (!refMatch) continue;
+      const tipo = LINK_TIPOS.has(link.tipo ?? "") ? link.tipo : "relacionado_con";
+      const target = await c.query(
+        "SELECT id FROM acuerdos WHERE public_ref = $1 AND id <> $2",
+        [refMatch[0], acuerdoId]
+      );
+      if (target.rows.length === 0) continue; // el acuerdo referenciado aún no existe
+      const inserted = await c.query(
+        `INSERT INTO acuerdo_links (from_acuerdo_id, to_acuerdo_id, tipo, confirmed, created_by)
+         VALUES ($1, $2, $3, false, $4)
+         ON CONFLICT (from_acuerdo_id, to_acuerdo_id, tipo) DO NOTHING
+         RETURNING id`,
+        [acuerdoId, target.rows[0].id, tipo, user.id]
+      );
+      if ((inserted.rowCount ?? 0) > 0) sugeridos++;
+    }
+
     await c.query(
       `UPDATE extraction_candidates
        SET review_status = 'approved', reviewed_by = $2, reviewed_at = now(), committed_acuerdo_id = $3
        WHERE id = $1`,
       [data.candidateId, user.id, acuerdoId]
     );
+
+    if (sugeridos > 0) {
+      await audit(user.id, "create", "acuerdo_link", acuerdoId, {
+        metadata: { via: "ingesta", sugeridos, confirmed: false },
+        client: c,
+      });
+    }
 
     await audit(user.id, "create", "acuerdo", acuerdoId, {
       restricted,
