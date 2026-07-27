@@ -46,7 +46,7 @@ export default async function ComitesPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Comités y agencias"
         description="Entidades a las que se pueden asignar tareas. Sus miembros ven las tareas del comité."
@@ -54,7 +54,7 @@ export default async function ComitesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Nuevo comité</CardTitle>
+          <CardTitle>Nuevo comité</CardTitle>
           <CardDescription>Opcionalmente asociado a un área.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,7 +89,7 @@ export default async function ComitesPage() {
           <li key={c.id}>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">{c.name}</CardTitle>
+                <CardTitle>{c.name}</CardTitle>
                 {c.area_name ? <CardDescription>Área: {c.area_name}</CardDescription> : null}
               </CardHeader>
               <CardContent>

@@ -90,7 +90,7 @@ export default async function ExpedientePage({ params }: PageProps<"/expedientes
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={exp.titulo}
         description={exp.descripcion ?? undefined}
@@ -127,7 +127,7 @@ export default async function ExpedientePage({ params }: PageProps<"/expedientes
       {secretary ? (
         <form
           action={addAcuerdoToExpediente}
-          className="flex flex-col gap-2 rounded-2xl border bg-card p-4 shadow-xs sm:flex-row sm:items-end"
+          className="flex flex-col gap-2 rounded-xl bg-card p-4 ring-1 ring-foreground/10 sm:flex-row sm:items-end"
         >
           <input type="hidden" name="expedienteId" value={exp.id} />
           <div className="flex-1 space-y-1">
@@ -168,7 +168,7 @@ export default async function ExpedientePage({ params }: PageProps<"/expedientes
                       }`}
                       aria-hidden
                     />
-                    <div className="rounded-2xl border bg-card p-4 shadow-xs">
+                    <div className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

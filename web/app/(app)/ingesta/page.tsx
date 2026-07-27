@@ -55,7 +55,7 @@ export default async function IngestaPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Ingesta de documentos"
         description="Sube la recopilación anual en PDF; la extracción propone acuerdos que la Secretaría revisa y aprueba uno a uno."
@@ -63,7 +63,7 @@ export default async function IngestaPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Nueva ingesta</CardTitle>
+          <CardTitle>Nueva ingesta</CardTitle>
           <CardDescription>
             El procesamiento ocurre íntegramente en nuestra infraestructura; ningún contenido
             sale de ella. Ningún acuerdo se publica sin aprobación humana.
@@ -112,7 +112,7 @@ export default async function IngestaPage() {
               <li key={j.id}>
                 <Link
                   href={`/ingesta/${j.id}`}
-                  className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-xs transition-colors hover:border-ring/40"
+                  className="flex min-h-14 items-center justify-between gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition-colors hover:ring-ring/40"
                 >
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">

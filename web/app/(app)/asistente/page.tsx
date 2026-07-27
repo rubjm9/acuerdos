@@ -8,7 +8,7 @@ export const metadata = { title: "Asistente" };
 export default async function AsistentePage() {
   await requireUser();
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Asistente"
         description="Pregunta en lenguaje natural. Responde solo a partir del corpus de acuerdos y cita siempre su acta y página."

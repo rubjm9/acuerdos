@@ -51,7 +51,7 @@ export default async function BusquedaPage({
     "border-input h-9 max-w-full rounded-md border bg-transparent px-3 text-sm shadow-xs";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Buscar"
         description="Busca por tema, texto libre o referencia exacta (p. ej. ACU-2018-0142 o «acta 12/2020»)."
@@ -125,7 +125,7 @@ export default async function BusquedaPage({
           <ul className="space-y-2">
             {response.results.map((r) => (
               <li key={r.acuerdo_id}>
-                <div className="space-y-2.5 rounded-2xl border bg-card p-4 shadow-xs">
+                <div className="space-y-2.5 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
                   <div className="flex items-start justify-between gap-3">
                     <Link
                       href={`/acuerdos/${r.acuerdo_id}`}

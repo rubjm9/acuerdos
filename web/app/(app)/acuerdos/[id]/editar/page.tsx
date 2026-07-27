@@ -64,7 +64,7 @@ export default async function EditarAcuerdoPage({
   const fecha = toDateInput(ac.fecha_adopcion);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-8">
       <PageHeader
         title={`Editar ${ac.public_ref}`}
         description="La referencia pública es permanente y no se puede cambiar."

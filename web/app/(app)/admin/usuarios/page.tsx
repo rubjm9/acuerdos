@@ -54,7 +54,7 @@ export default async function UsuariosPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Usuarios y roles"
         description="Alta de personas, asignación de rol y acceso a las áreas restringidas."
@@ -62,7 +62,7 @@ export default async function UsuariosPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Nueva persona</CardTitle>
+          <CardTitle>Nueva persona</CardTitle>
           <CardDescription>
             Podrá iniciar sesión con su cuenta de Google del dominio autorizado.
           </CardDescription>

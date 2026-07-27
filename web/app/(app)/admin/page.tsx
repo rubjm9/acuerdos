@@ -43,7 +43,7 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Administración"
         description="Gestión de personas, permisos y taxonomía de la plataforma."
@@ -53,7 +53,7 @@ export default async function AdminPage() {
           <li key={s.href}>
             <Link
               href={s.href}
-              className="flex min-h-24 items-center justify-between gap-4 rounded-2xl border bg-card p-5 shadow-xs transition-colors hover:border-ring/40"
+              className="flex min-h-24 items-center justify-between gap-4 rounded-xl bg-card p-5 ring-1 ring-foreground/10 transition-colors hover:ring-ring/40"
             >
               <div className="flex items-start gap-4">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">

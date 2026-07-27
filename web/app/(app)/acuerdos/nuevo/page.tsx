@@ -32,7 +32,7 @@ export default async function NuevoAcuerdoPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-8">
       <PageHeader
         title="Nuevo acuerdo"
         description="Registra una decisión formal con su acta de origen y sus áreas."

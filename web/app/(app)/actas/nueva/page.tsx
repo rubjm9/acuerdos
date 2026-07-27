@@ -13,7 +13,7 @@ export default async function NuevaActaPage() {
   await requireSecretary();
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="mx-auto max-w-xl space-y-8">
       <PageHeader
         title="Nueva acta"
         description="Registra una reunión y adjunta su documento original (PDF o Word)."

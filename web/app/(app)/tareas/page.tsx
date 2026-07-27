@@ -89,7 +89,7 @@ export default async function TareasPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Tareas"
         description="Encargos derivados de los acuerdos, con responsable y vencimiento."
@@ -166,7 +166,7 @@ export default async function TareasPage({
             <li key={t.id}>
               <Link
                 href={`/tareas/${t.id}`}
-                className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-xs transition-colors hover:border-ring/40"
+                className="flex min-h-14 items-center justify-between gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition-colors hover:ring-ring/40"
               >
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{t.titulo}</div>

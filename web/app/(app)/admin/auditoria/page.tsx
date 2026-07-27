@@ -64,7 +64,7 @@ export default async function AuditoriaPage({
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Auditoría"
         description="Registro inmutable de actividad. Los eventos sobre áreas restringidas incluyen también las lecturas."
@@ -98,7 +98,7 @@ export default async function AuditoriaPage({
           description="La actividad de la plataforma aparecerá aquí a medida que ocurra."
         />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border bg-card shadow-xs">
+        <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/10">
           <table className="w-full min-w-160 text-sm">
             <thead>
               <tr className="border-b text-left text-xs text-muted-foreground">

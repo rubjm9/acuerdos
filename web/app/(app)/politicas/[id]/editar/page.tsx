@@ -46,7 +46,7 @@ export default async function EditarPoliticaPage({
   if (!p) notFound();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-8">
       <PageHeader
         title={`Editar ${p.public_ref}`}
         description="La referencia pública es permanente y no se puede cambiar."

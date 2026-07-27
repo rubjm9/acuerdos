@@ -63,23 +63,29 @@ export default async function AccesoPage({
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background px-4">
+      {/* Fondo decorativo sutil (no interactivo) */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-32 -top-32 size-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-40 -right-24 size-96 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md">
             <Gavel className="size-6" aria-hidden />
           </div>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">Acuerdos</h1>
+            <h1 className="font-display text-3xl font-medium tracking-tight">Acuerdos</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Plataforma de gestión de actas, acuerdos y expedientes
+              Archivo institucional y control de gobernanza
             </p>
           </div>
         </div>
 
-        <Card>
+        <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-base">Iniciar sesión</CardTitle>
+            <CardTitle>Iniciar sesión</CardTitle>
             <CardDescription>
               Acceso reservado a personas autorizadas por la Asamblea.
             </CardDescription>

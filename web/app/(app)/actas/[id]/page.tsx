@@ -55,7 +55,7 @@ export default async function ActaPage({ params }: PageProps<"/actas/[id]">) {
   const hasFile = Boolean(acta.file_object_key);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={`Acta ${acta.numero}/${acta.año}`}
         description={`Reunión del ${formatFechaLarga(acta.fecha)}`}
@@ -93,7 +93,7 @@ export default async function ActaPage({ params }: PageProps<"/actas/[id]">) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle>
             Acuerdos de esta acta ({acuerdos.length})
           </CardTitle>
         </CardHeader>

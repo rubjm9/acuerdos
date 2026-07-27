@@ -175,7 +175,7 @@ export function AssistantChat({ llmEnabled }: { llmEnabled: boolean }) {
                       <li key={`${s.kind}-${s.id}`}>
                         <Link
                           href={s.href}
-                          className="flex items-start gap-2 rounded-lg border bg-card px-3 py-2 text-sm transition-colors hover:border-ring/40"
+                          className="flex items-start gap-2 rounded-lg border bg-card px-3 py-2 text-sm transition-colors hover:ring-ring/40"
                         >
                           {s.kind === "politica" ? (
                             <Library className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -206,7 +206,7 @@ export function AssistantChat({ llmEnabled }: { llmEnabled: boolean }) {
         }}
         className="sticky bottom-20 mt-2 md:bottom-4"
       >
-        <div className="flex items-end gap-2 rounded-2xl border bg-card p-2 shadow-sm">
+        <div className="flex items-end gap-2 rounded-xl bg-card p-2 ring-1 ring-foreground/10">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}

@@ -36,7 +36,7 @@ export default async function AreasPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Áreas"
         description="Taxonomía temática. Un acuerdo puede pertenecer a varias áreas."
@@ -44,7 +44,7 @@ export default async function AreasPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Nueva área</CardTitle>
+          <CardTitle>Nueva área</CardTitle>
           <CardDescription>
             Las áreas restringidas solo son visibles con acceso explícito y quedan
             bajo auditoría reforzada.
@@ -69,7 +69,7 @@ export default async function AreasPage() {
         {areas.map((a) => (
           <li key={a.id}>
             <div
-              className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-xs ${
+              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10 ${
                 !a.is_active ? "opacity-60" : ""
               }`}
             >

@@ -71,7 +71,7 @@ export default async function PoliticaPage({ params }: PageProps<"/politicas/[id
   const secretary = isSecretary(user);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={p.titulo}
         description={p.resumen ?? undefined}
@@ -126,7 +126,7 @@ export default async function PoliticaPage({ params }: PageProps<"/politicas/[id
       {/* Acuerdos que sustentan la política */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle>
             Acuerdos de la política ({acuerdos.length})
           </CardTitle>
         </CardHeader>

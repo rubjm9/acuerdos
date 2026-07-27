@@ -73,7 +73,7 @@ export default async function RevisionIngestaPage({
     d ? toDateInput(d) : job.año ? `${job.año}-01-01` : "";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={`Revisión: ${job.original_name ?? "documento"}${job.año ? ` (${job.año})` : ""}`}
         description={

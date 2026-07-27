@@ -61,7 +61,7 @@ export default async function TareaPage({ params }: PageProps<"/tareas/[id]">) {
   const transiciones = TRANSICIONES[t.estado] ?? [];
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-8">
       <PageHeader
         title={t.titulo}
         meta={<StatusBadge estado={t.vencida ? "vencida" : t.estado} />}
@@ -109,7 +109,7 @@ export default async function TareaPage({ params }: PageProps<"/tareas/[id]">) {
       {t.descripcion ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Descripción</CardTitle>
+            <CardTitle>Descripción</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="max-w-prose whitespace-pre-wrap text-[15px] leading-relaxed">
@@ -122,7 +122,7 @@ export default async function TareaPage({ params }: PageProps<"/tareas/[id]">) {
       {canChange && transiciones.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Actualizar estado</CardTitle>
+            <CardTitle>Actualizar estado</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">

@@ -146,7 +146,7 @@ export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]"
   const secretary = isSecretary(user);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={ac.titulo}
         meta={
@@ -175,7 +175,7 @@ export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]"
       {/* Cita de origen */}
       <Link
         href={`/actas/${ac.acta_id}`}
-        className="flex items-center gap-3 rounded-2xl border bg-card p-4 shadow-xs transition-colors hover:border-ring/40"
+        className="flex items-center gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition-colors hover:ring-ring/40"
       >
         <FileText className="size-5 shrink-0 text-muted-foreground" aria-hidden />
         <div className="text-sm">
@@ -193,7 +193,7 @@ export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]"
       {/* Texto íntegro */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Texto del acuerdo</CardTitle>
+          <CardTitle>Texto del acuerdo</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="max-w-prose whitespace-pre-wrap text-[15px] leading-relaxed">
@@ -241,7 +241,7 @@ export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]"
       {/* Hilo histórico: enlaces tipados */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Hilo histórico</CardTitle>
+          <CardTitle>Hilo histórico</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {links.length === 0 ? (
@@ -349,7 +349,7 @@ export default async function AcuerdoPage({ params }: PageProps<"/acuerdos/[id]"
       {/* Tareas derivadas */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Tareas derivadas ({tareas.length})</CardTitle>
+          <CardTitle>Tareas derivadas ({tareas.length})</CardTitle>
           {secretary ? (
             <CardAction>
               <Button asChild size="sm" variant="outline">

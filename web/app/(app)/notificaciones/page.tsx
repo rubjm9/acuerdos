@@ -33,7 +33,7 @@ export default async function NotificacionesPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Notificaciones"
         description="Avisos sobre tareas, acuerdos e ingestas."
@@ -51,8 +51,8 @@ export default async function NotificacionesPage() {
             const inner = (
               <div
                 className={cn(
-                  "rounded-2xl border bg-card p-4 shadow-xs transition-colors",
-                  n.href && "hover:border-ring/40",
+                  "rounded-xl bg-card p-4 ring-1 ring-foreground/10 transition-colors",
+                  n.href && "hover:ring-ring/40",
                   !n.read_at && "border-primary/30 bg-accent/40"
                 )}
               >

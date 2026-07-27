@@ -18,7 +18,7 @@ export default async function NuevoExpedientePage() {
   );
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="mx-auto max-w-xl space-y-8">
       <PageHeader
         title="Nuevo expediente"
         description="Crea un hilo para seguir un asunto a lo largo del tiempo."

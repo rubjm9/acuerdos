@@ -30,7 +30,7 @@ export default async function InformesPage() {
     "border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Informes"
         description="Exportaciones en PDF y hoja de cálculo, siempre con la cita de origen."
@@ -40,7 +40,7 @@ export default async function InformesPage() {
         {/* Histórico de expediente */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Histórico de un expediente</CardTitle>
+            <CardTitle>Histórico de un expediente</CardTitle>
             <CardDescription>
               Línea de tiempo completa con cada acuerdo y su acta y página.
             </CardDescription>
@@ -79,7 +79,7 @@ export default async function InformesPage() {
         {/* Tareas pendientes */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Tareas pendientes</CardTitle>
+            <CardTitle>Tareas pendientes</CardTitle>
             <CardDescription>
               Por miembro y por comité, con vencimientos y tareas vencidas.
             </CardDescription>
@@ -101,7 +101,7 @@ export default async function InformesPage() {
         {/* Acuerdos por área */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Acuerdos por área y estado</CardTitle>
+            <CardTitle>Acuerdos por área y estado</CardTitle>
             <CardDescription>
               Visión general del estado de los acuerdos, filtrable por área.
             </CardDescription>

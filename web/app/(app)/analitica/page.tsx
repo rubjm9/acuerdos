@@ -125,7 +125,7 @@ export default async function AnaliticaPage() {
   const t = tareaResumen[0];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Analítica"
         description="Seguimiento del estado de los acuerdos y de las tareas por área y responsable."
@@ -139,7 +139,7 @@ export default async function AnaliticaPage() {
           { label: "Tareas abiertas", value: t?.abiertas ?? 0 },
           { label: "Tareas vencidas", value: t?.vencidas ?? 0, alert: (t?.vencidas ?? 0) > 0 },
         ].map((m) => (
-          <div key={m.label} className="rounded-2xl border bg-card p-4 shadow-xs">
+          <div key={m.label} className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
             <div
               className={`text-2xl font-semibold tabular-nums tracking-tight ${
                 m.alert ? "text-status-anulado" : ""
@@ -155,7 +155,7 @@ export default async function AnaliticaPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Acuerdos por estado</CardTitle>
+            <CardTitle>Acuerdos por estado</CardTitle>
           </CardHeader>
           <CardContent>
             <BarList items={estadoBars} />
@@ -164,7 +164,7 @@ export default async function AnaliticaPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Acuerdos por área</CardTitle>
+            <CardTitle>Acuerdos por área</CardTitle>
             <CardDescription>Áreas con más decisiones registradas.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -176,7 +176,7 @@ export default async function AnaliticaPage() {
       {/* Acuerdos estancados */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="size-4 text-status-curso" aria-hidden />
             Acuerdos en curso sin resolver
           </CardTitle>
@@ -217,7 +217,7 @@ export default async function AnaliticaPage() {
       {/* Seguimiento por área */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2">
             <TrendingUp className="size-4 text-muted-foreground" aria-hidden />
             Seguimiento por área
           </CardTitle>
@@ -262,7 +262,7 @@ export default async function AnaliticaPage() {
       {/* Carga por responsable */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Carga por responsable</CardTitle>
+          <CardTitle>Carga por responsable</CardTitle>
           <CardDescription>Tareas abiertas por persona y comité (con vencidas).</CardDescription>
         </CardHeader>
         <CardContent>

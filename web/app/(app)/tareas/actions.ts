@@ -8,9 +8,15 @@ import { withUser } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { notifyUser, notifyCommittee } from "@/lib/notify";
 
+/** FormData envía "" en selects sin valor; Zod .uuid() lo rechaza como "Invalid UUID". */
+function optionalUuid(value: FormDataEntryValue | null) {
+  const s = String(value ?? "").trim();
+  return s === "" ? null : s;
+}
+
 const tareaSchema = z
   .object({
-    acuerdo_id: z.string().uuid(),
+    acuerdo_id: z.string().uuid("Selecciona un acuerdo válido"),
     titulo: z.string().trim().min(3).max(200),
     descripcion: z.string().trim().max(4000).optional().nullable(),
     assignee_user_id: z.string().uuid().optional().nullable(),
@@ -24,8 +30,12 @@ const tareaSchema = z
 function parseTareaForm(formData: FormData) {
   const assignee = String(formData.get("assignee") ?? "");
   const [kind, id] = assignee.split(":");
+  const acuerdoId = optionalUuid(formData.get("acuerdo_id"));
+  if (!acuerdoId) {
+    throw new Error("Selecciona el acuerdo de origen de la tarea");
+  }
   return tareaSchema.parse({
-    acuerdo_id: formData.get("acuerdo_id"),
+    acuerdo_id: acuerdoId,
     titulo: formData.get("titulo"),
     descripcion: formData.get("descripcion") || null,
     assignee_user_id: kind === "u" ? id : null,

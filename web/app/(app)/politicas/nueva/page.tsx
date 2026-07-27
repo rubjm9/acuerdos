@@ -19,7 +19,7 @@ export default async function NuevaPoliticaPage() {
   );
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-8">
       <PageHeader
         title="Nueva política"
         description="Consolida la postura de la Asamblea sobre un asunto y reúne los acuerdos que la sustentan."

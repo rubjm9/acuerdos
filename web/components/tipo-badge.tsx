@@ -14,7 +14,7 @@ export function TipoBadge({ tipo, className }: { tipo: AcuerdoTipo; className?: 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap",
         TIPO_BADGE[tipo],
         className
       )}
