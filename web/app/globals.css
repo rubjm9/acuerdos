@@ -71,8 +71,10 @@
 
 :root {
   /* Lienzo un punto más profundo (matiz teal frío): las tarjetas blancas
-     se separan solas, sin depender de la sombra. */
-  --background: oklch(0.971 0.005 215);
+     se separan solas, sin depender de la sombra. Mismo tono que el
+     sidebar (antes más azulado que el body); el sidebar ahora es un
+     punto más oscuro de esta misma familia, no un color distinto. */
+  --background: oklch(0.978 0.007 211);
   --foreground: oklch(0.2 0.02 220);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.2 0.02 220);
@@ -99,13 +101,13 @@
   --chart-4: oklch(0.55 0.16 300);
   --chart-5: oklch(0.6 0.02 213);
   --radius: 0.625rem;
-  --sidebar: oklch(0.978 0.007 210);
+  --sidebar: oklch(0.951 0.009 211);
   --sidebar-foreground: oklch(0.2 0.02 220);
   --sidebar-primary: oklch(0.44 0.062 207);
   --sidebar-primary-foreground: oklch(0.99 0.005 200);
   --sidebar-accent: oklch(0.94 0.024 200);
   --sidebar-accent-foreground: oklch(0.38 0.06 207);
-  --sidebar-border: oklch(0.888 0.01 212);
+  --sidebar-border: oklch(0.87 0.011 211);
   --sidebar-ring: oklch(0.44 0.062 207);
   /* Estados: en vigor (azul), en curso (ámbar), cumplido (verde),
      superado (gris), anulado (rojo). Fondo suave + texto AA. */
