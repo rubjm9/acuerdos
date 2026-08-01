@@ -63,6 +63,8 @@ services:
 
   minio-init:
     image: minio/mc:latest
+    # One-shot: no reiniciar (Coolify a veces fuerza restart y entra en bucle).
+    restart: "no"
     depends_on:
       minio:
         condition: service_healthy
@@ -106,6 +108,9 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:?set in .env}
+      # Obligatorio en Docker: si no, Next usa el HOSTNAME del contenedor y el proxy no llega.
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
     # Coolify / Caddy enrutan a este puerto por la red Docker (sin bind al host).
     expose:
       - "3000"
