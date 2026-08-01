@@ -19,7 +19,9 @@ búsqueda híbrida sobre el archivo histórico e ingesta asistida por IA
 
 ```bash
 cp .env.example .env          # rellena contraseñas y claves
-docker compose up -d postgres minio minio-init
+# Publica Postgres/MinIO en localhost (no hace falta en Coolify/producción)
+docker compose -f docker-compose.yml -f docker-compose.host-ports.yml \
+  up -d postgres minio minio-init
 
 cd web && npm install && npm run dev          # http://localhost:3000
 cd worker && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt

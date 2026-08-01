@@ -12,6 +12,11 @@
 #
 # Local development without GPU: run the default profile only; the worker and
 # search degrade gracefully (no rerank, deterministic-stub extraction).
+#
+# Puertos en el host: por defecto NO se publican (Coolify / proxy inverso
+# enruta por la red Docker). Desarrollo local con npm/psql en el host:
+#   docker compose -f docker-compose.yml -f docker-compose.host-ports.yml \
+#     up -d postgres minio minio-init
 # =============================================================================
 
 name: acuerdos
@@ -29,8 +34,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/migrations:/docker-entrypoint-initdb.d:ro
-    ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    expose:
+      - "5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -47,9 +52,9 @@ services:
       MINIO_REGION: eu-central-1
     volumes:
       - miniodata:/data
-    ports:
-      - "127.0.0.1:${MINIO_PORT:-9000}:9000"
-      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    expose:
+      - "9000"
+      - "9001"
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 10s
@@ -101,8 +106,9 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:?set in .env}
-    ports:
-      - "127.0.0.1:${WEB_PORT:-3000}:3000"
+    # Coolify / Caddy enrutan a este puerto por la red Docker (sin bind al host).
+    expose:
+      - "3000"
 
   worker:
     build: ./worker
@@ -124,8 +130,8 @@ services:
       LLM_MODEL: ${LLM_MODEL:-mistral-small-3}
       TEI_EMBED_URL: ${TEI_EMBED_URL:-}
       EMBEDDING_DIM: ${EMBEDDING_DIM:-1024}
-    ports:
-      - "127.0.0.1:${WORKER_PORT:-8000}:8000"
+    expose:
+      - "8000"
 
   # ---------------------------------------------------------------------------
   # AI profile — deploy on the GPU node (24–48 GB VRAM). See docs/runbook.md.

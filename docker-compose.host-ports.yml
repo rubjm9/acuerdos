@@ -1,0 +1,15 @@
+# Override opcional: publica Postgres/MinIO en localhost para desarrollo
+# (npm run dev, psql, consola MinIO). No usar en Coolify.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.host-ports.yml \
+#     up -d postgres minio minio-init
+
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+
+  minio:
+    ports:
+      - "127.0.0.1:${MINIO_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
