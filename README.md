@@ -28,6 +28,8 @@ cd worker && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/uvicorn app.main:app --port 8000    # worker de ingesta
 ```
 
+**MVP en Vercel + Supabase (sin Docker):** ver [`docs/mvp-vercel-supabase.md`](docs/mvp-vercel-supabase.md).
+
 Con `AUTH_DEV_LOGIN=true` puedes entrar con cualquier email dado de alta en la
 tabla `users` (sin contraseña). El **primer usuario** que inicia sesión se
 convierte en administrador (bootstrap).

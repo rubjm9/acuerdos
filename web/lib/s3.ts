@@ -5,10 +5,10 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-/** Almacenamiento de objetos autoalojado (MinIO, UE). */
+/** Almacenamiento de objetos (MinIO local o Supabase Storage S3-compatible). */
 export const s3 = new S3Client({
   endpoint: process.env.S3_ENDPOINT,
-  region: "eu-central-1",
+  region: process.env.S3_REGION ?? "eu-central-1",
   forcePathStyle: true,
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY ?? "",
