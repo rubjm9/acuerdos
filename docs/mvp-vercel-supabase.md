@@ -27,31 +27,30 @@ Sin worker puedes crear contenido a mano; la UI degrada bien si no hay
 2. Región: **Central EU (Frankfurt)** u otra UE.
 3. Guarda la contraseña del usuario `postgres`.
 
-### Connection strings
+### Connection strings (importante en Vercel)
 
-En **Project Settings → Database**:
+En **Project Settings → Database → Connect**:
 
-- Usa la conexión **directa** (`db.<ref>.supabase.co:5432`) o el pooler en
-  modo **Session**.
-- **No** uses Transaction mode (puerto 6543): la app hace
-  `SET LOCAL app.user_id` y necesita sesión real.
-
-Necesitarás dos URLs:
-
-| Variable | Usuario | Uso |
-|---|---|---|
-| `DATABASE_URL` | `app_web` | Datos de la UI (sujeto a RLS) |
-| `DATABASE_URL_OWNER` | `postgres` | Login, pg-boss, bootstrap |
-
-Formato:
+- **No uses** el host directo `db.<ref>.supabase.co` desde Vercel: es IPv6 y
+  Vercel no lo resuelve (`ENOTFOUND`).
+- Usa el **pooler Session mode** (puerto **5432**, IPv4):
 
 ```text
-postgresql://app_web:PASSWORD@db.XXXX.supabase.co:5432/postgres
-postgresql://postgres:PASSWORD@db.XXXX.supabase.co:5432/postgres
+postgresql://app_web.<PROJECT_REF>:<PASSWORD_WEB>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
+postgresql://postgres.<PROJECT_REF>:<PASSWORD_POSTGRES>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
 ```
 
-Si la contraseña tiene `@`, `#`, `%`, etc., **URL-encódala**.
+La región del host (`aws-0-eu-central-1…`) debe coincidir con la de tu proyecto
+(Frankfurt). Cópiala del panel Connect si difiere.
 
+- **No** uses Transaction mode (puerto 6543): la app hace `SET LOCAL app.user_id`
+  y necesita sesión real.
+- Si la contraseña tiene `@`, `#`, `%`, etc., **URL-encódala**.
+
+| Variable | Usuario en el pooler | Uso |
+|---|---|---|
+| `DATABASE_URL` | `app_web.<PROJECT_REF>` | Datos de la UI (RLS) |
+| `DATABASE_URL_OWNER` | `postgres.<PROJECT_REF>` | Login, pg-boss, bootstrap |
 ---
 
 ## 2. Esquema SQL (orden)
@@ -153,7 +152,8 @@ AUTH_GOOGLE_SECRET=
 | Síntoma | Revisar |
 |---|---|
 | 404 NOT_FOUND de Vercel | Root Directory ≠ `web` |
-| Error de DB / timeout | ¿Session/directo, no Transaction pooler? ¿Password URL-encoded? |
+| `ENOTFOUND db.….supabase.co` | Usa pooler Session (`aws-0-….pooler.supabase.com:5432`), no el host `db.` |
+| Error de DB / timeout | ¿Session mode, no Transaction? ¿Password URL-encoded? ¿SSL? |
 | Login no aparece | `AUTH_DEV_LOGIN=true` y redeploy |
 | `FIELD_ENCRYPTION_KEY` inválida | Tiene que ser 32 bytes en base64 (`openssl rand -base64 32`) |
 | Subida de PDF falla | Buckets + S3 keys + `S3_ENDPOINT` |

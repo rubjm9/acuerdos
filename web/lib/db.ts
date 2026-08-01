@@ -15,13 +15,24 @@ declare global {
 }
 
 function createPools() {
+  // Supabase (y casi todo Postgres gestionado) exige TLS desde Vercel.
+  const useSsl =
+    process.env.DATABASE_SSL === "true" ||
+    process.env.DATABASE_SSL === "1" ||
+    /supabase\.(co|com)/i.test(process.env.DATABASE_URL ?? "") ||
+    /supabase\.(co|com)/i.test(process.env.DATABASE_URL_OWNER ?? "");
+
+  const ssl = useSsl ? { rejectUnauthorized: false } : undefined;
+
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     max: 10,
+    ssl,
   });
   const ownerPool = new Pool({
     connectionString: process.env.DATABASE_URL_OWNER,
     max: 3,
+    ssl,
   });
   return { pool, ownerPool };
 }

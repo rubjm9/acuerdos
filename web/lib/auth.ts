@@ -97,6 +97,8 @@ if (process.env.AUTH_DEV_LOGIN === "true") {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   session: { strategy: "jwt" },
+  // Vercel / proxies: Auth.js necesita confiar en el host de AUTH_URL.
+  trustHost: true,
   pages: { signIn: "/acceso" },
   callbacks: {
     async signIn({ user, account, profile }) {
