@@ -33,20 +33,23 @@ En **Project Settings → Database → Connect**:
 
 - **No uses** el host directo `db.<ref>.supabase.co` desde Vercel: es IPv6 y
   Vercel no lo resuelve (`ENOTFOUND`).
-- Usa el **pooler Session mode** (puerto **5432**, IPv4):
+- Usa el **pooler Transaction mode** (puerto **6543**, IPv4). Multiplexa muchas
+  peticiones cortas y es el modo adecuado para serverless. La app ya fija
+  `app.user_id` con `SET LOCAL` dentro de una transacción, compatible con este
+  modo:
 
 ```text
-postgresql://app_web.<PROJECT_REF>:<PASSWORD_WEB>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
-postgresql://postgres.<PROJECT_REF>:<PASSWORD_POSTGRES>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
+postgresql://app_web.<PROJECT_REF>:<PASSWORD_WEB>@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
+postgresql://postgres.<PROJECT_REF>:<PASSWORD_POSTGRES>@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
 ```
 
 La región del host (`aws-0-eu-central-1…`) debe coincidir con la de tu proyecto
-(Frankfurt). Cópiala del panel Connect si difiere.
+(Frankfurt / Paris / etc.). Cópiala del panel Connect si difiere.
 
-- **No** uses Transaction mode (puerto 6543): la app hace `SET LOCAL app.user_id`
-  y necesita sesión real.
-- El Session pooler Free limita ~**15 clientes**. En Vercel la app usa pools
-  pequeños (`max: 1`) y **no arranca pg-boss** (evita `EMAXCONNSESSION`).
+- Si en Vercel aún tienes el puerto **5432** (Session), el código lo reescribe
+  a **6543** al arrancar. Session Free limita ~15 clientes totales y provoca
+  `EMAXCONNSESSION` con pocos usuarios concurrentes o con `next dev` local.
+- En Vercel la app usa pools pequeños (`max: 1`) y **no arranca pg-boss**.
 - Si la contraseña tiene `@`, `#`, `%`, etc., **URL-encódala**.
 
 | Variable | Usuario en el pooler | Uso |

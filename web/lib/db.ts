@@ -14,6 +14,38 @@ declare global {
   var __acuerdosPools: { pool: Pool; ownerPool: Pool } | undefined;
 }
 
+/**
+ * Session pooler (5432) = 1 cliente ≈ 1 backend; en Free ~15 clientes totales.
+ * Transaction pooler (6543) multiplexa muchas peticiones cortas: apto para
+ * Vercel. Nuestra app ya usa BEGIN + set_config(..., true) + COMMIT, así que
+ * SET LOCAL es compatible con Transaction mode.
+ */
+function preferTransactionPooler(url: string | undefined): {
+  url: string | undefined;
+  rewritten: boolean;
+  mode: "transaction" | "session" | "direct" | "unknown";
+} {
+  if (!url) return { url, rewritten: false, mode: "unknown" };
+  try {
+    const u = new URL(url);
+    const isPooler = /pooler\.supabase\.com$/i.test(u.hostname);
+    if (!isPooler) {
+      return { url, rewritten: false, mode: /supabase\.(co|com)/i.test(u.hostname) ? "direct" : "unknown" };
+    }
+    if (u.port === "6543") {
+      return { url, rewritten: false, mode: "transaction" };
+    }
+    // 5432 o sin puerto explícito en pooler → Session; forzar Transaction.
+    if (u.port === "5432" || u.port === "") {
+      u.port = "6543";
+      return { url: u.toString(), rewritten: true, mode: "transaction" };
+    }
+    return { url, rewritten: false, mode: "session" };
+  } catch {
+    return { url, rewritten: false, mode: "unknown" };
+  }
+}
+
 function createPools() {
   // Supabase (y casi todo Postgres gestionado) exige TLS desde Vercel.
   const useSsl =
@@ -24,12 +56,14 @@ function createPools() {
 
   const ssl = useSsl ? { rejectUnauthorized: false } : undefined;
 
-  // En Vercel/serverless cada instancia abre su propio pool. El Session pooler
-  // de Supabase Free limita ~15 clientes; pools grandes + pg-boss agotan el cupo
-  // (EMAXCONNSESSION) y la app deja de responder.
+  const appUrl = preferTransactionPooler(process.env.DATABASE_URL);
+  const ownerUrl = preferTransactionPooler(process.env.DATABASE_URL_OWNER);
+
   const serverless = process.env.VERCEL === "1" || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
+  // En serverless sigue siendo mejor un pool mínimo por isolate.
   const poolMax = serverless ? 1 : 10;
   const ownerMax = serverless ? 1 : 3;
+  const idleMs = serverless ? 1000 : 30000;
 
   // #region agent log
   fetch("http://127.0.0.1:7597/ingest/70c41da7-0b62-46a0-b333-967b01b5a216", {
@@ -37,28 +71,48 @@ function createPools() {
     headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d418f0" },
     body: JSON.stringify({
       sessionId: "d418f0",
-      hypothesisId: "A",
+      runId: "txn-pooler",
+      hypothesisId: "H",
       location: "web/lib/db.ts:createPools",
       message: "pool config",
-      data: { serverless, poolMax, ownerMax, vercel: process.env.VERCEL ?? null },
+      data: {
+        serverless,
+        poolMax,
+        ownerMax,
+        appMode: appUrl.mode,
+        ownerMode: ownerUrl.mode,
+        appRewritten: appUrl.rewritten,
+        ownerRewritten: ownerUrl.rewritten,
+        vercel: process.env.VERCEL ?? null,
+      },
       timestamp: Date.now(),
     }),
   }).catch(() => {});
-  console.info("[db] pool config", { serverless, poolMax, ownerMax });
+  console.info("[db] pool config", {
+    serverless,
+    poolMax,
+    ownerMax,
+    appMode: appUrl.mode,
+    ownerMode: ownerUrl.mode,
+    appRewritten: appUrl.rewritten,
+    ownerRewritten: ownerUrl.rewritten,
+  });
   // #endregion
 
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: appUrl.url,
     max: poolMax,
-    idleTimeoutMillis: serverless ? 1000 : 30000,
+    idleTimeoutMillis: idleMs,
     connectionTimeoutMillis: 10000,
+    allowExitOnIdle: serverless,
     ssl,
   });
   const ownerPool = new Pool({
-    connectionString: process.env.DATABASE_URL_OWNER,
+    connectionString: ownerUrl.url,
     max: ownerMax,
-    idleTimeoutMillis: serverless ? 1000 : 30000,
+    idleTimeoutMillis: idleMs,
     connectionTimeoutMillis: 10000,
+    allowExitOnIdle: serverless,
     ssl,
   });
   return { pool, ownerPool };
@@ -91,7 +145,7 @@ export async function withUser<T>(
       headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d418f0" },
       body: JSON.stringify({
         sessionId: "d418f0",
-        hypothesisId: "A",
+        hypothesisId: "H",
         location: "web/lib/db.ts:withUser",
         message: "pool.connect failed",
         data: { code: (err as { code?: string })?.code ?? null, msg: msg.slice(0, 200) },
