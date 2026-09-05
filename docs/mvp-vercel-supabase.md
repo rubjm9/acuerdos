@@ -45,12 +45,14 @@ La región del host (`aws-0-eu-central-1…`) debe coincidir con la de tu proyec
 
 - **No** uses Transaction mode (puerto 6543): la app hace `SET LOCAL app.user_id`
   y necesita sesión real.
+- El Session pooler Free limita ~**15 clientes**. En Vercel la app usa pools
+  pequeños (`max: 1`) y **no arranca pg-boss** (evita `EMAXCONNSESSION`).
 - Si la contraseña tiene `@`, `#`, `%`, etc., **URL-encódala**.
 
 | Variable | Usuario en el pooler | Uso |
 |---|---|---|
 | `DATABASE_URL` | `app_web.<PROJECT_REF>` | Datos de la UI (RLS) |
-| `DATABASE_URL_OWNER` | `postgres.<PROJECT_REF>` | Login, pg-boss, bootstrap |
+| `DATABASE_URL_OWNER` | `postgres.<PROJECT_REF>` | Login / bootstrap (pg-boss desactivado en Vercel) |
 ---
 
 ## 2. Esquema SQL (orden)
