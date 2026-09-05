@@ -65,39 +65,12 @@ function createPools() {
   const ownerMax = serverless ? 1 : 3;
   const idleMs = serverless ? 1000 : 30000;
 
-  // #region agent log
-  fetch("http://127.0.0.1:7597/ingest/70c41da7-0b62-46a0-b333-967b01b5a216", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d418f0" },
-    body: JSON.stringify({
-      sessionId: "d418f0",
-      runId: "txn-pooler",
-      hypothesisId: "H",
-      location: "web/lib/db.ts:createPools",
-      message: "pool config",
-      data: {
-        serverless,
-        poolMax,
-        ownerMax,
-        appMode: appUrl.mode,
-        ownerMode: ownerUrl.mode,
-        appRewritten: appUrl.rewritten,
-        ownerRewritten: ownerUrl.rewritten,
-        vercel: process.env.VERCEL ?? null,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  console.info("[db] pool config", {
-    serverless,
-    poolMax,
-    ownerMax,
-    appMode: appUrl.mode,
-    ownerMode: ownerUrl.mode,
-    appRewritten: appUrl.rewritten,
-    ownerRewritten: ownerUrl.rewritten,
-  });
-  // #endregion
+  if (appUrl.rewritten || ownerUrl.rewritten) {
+    console.info("[db] pooler Session→Transaction (6543)", {
+      app: appUrl.mode,
+      owner: ownerUrl.mode,
+    });
+  }
 
   const pool = new Pool({
     connectionString: appUrl.url,
@@ -134,28 +107,7 @@ export async function withUser<T>(
   userId: string,
   fn: (client: PoolClient) => Promise<T>
 ): Promise<T> {
-  let client: PoolClient;
-  try {
-    client = await pool.connect();
-  } catch (err) {
-    // #region agent log
-    const msg = err instanceof Error ? err.message : String(err);
-    fetch("http://127.0.0.1:7597/ingest/70c41da7-0b62-46a0-b333-967b01b5a216", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d418f0" },
-      body: JSON.stringify({
-        sessionId: "d418f0",
-        hypothesisId: "H",
-        location: "web/lib/db.ts:withUser",
-        message: "pool.connect failed",
-        data: { code: (err as { code?: string })?.code ?? null, msg: msg.slice(0, 200) },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    console.error("[db] pool.connect failed", { code: (err as { code?: string })?.code, msg: msg.slice(0, 200) });
-    // #endregion
-    throw err;
-  }
+  const client = await pool.connect();
   try {
     await client.query("BEGIN");
     // set_config parametrizado: sin interpolación de cadenas
