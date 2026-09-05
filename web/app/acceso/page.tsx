@@ -49,6 +49,27 @@ export default async function AccesoPage({
   const googleEnabled = Boolean(process.env.AUTH_GOOGLE_ID);
   const devEnabled = process.env.AUTH_DEV_LOGIN === "true";
 
+  // #region agent log
+  fetch("http://127.0.0.1:7597/ingest/70c41da7-0b62-46a0-b333-967b01b5a216", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d418f0" },
+    body: JSON.stringify({
+      sessionId: "d418f0",
+      hypothesisId: "C",
+      location: "web/app/acceso/page.tsx",
+      message: "auth providers",
+      data: {
+        googleEnabled,
+        devEnabled,
+        authDevRaw: process.env.AUTH_DEV_LOGIN ?? null,
+        vercel: process.env.VERCEL ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  console.info("[acceso] providers", { googleEnabled, devEnabled });
+  // #endregion
+
   async function loginGoogle() {
     "use server";
     await signIn("google", { redirectTo: "/" });
